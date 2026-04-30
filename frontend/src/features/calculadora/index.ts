@@ -1,2 +1,2 @@
 /** Calculadora feature public API. */
-export {};
+export * from './components/CalculadoraNotas';

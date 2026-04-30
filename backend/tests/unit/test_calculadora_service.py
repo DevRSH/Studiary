@@ -1,58 +1,17 @@
-"""Unit tests for CalculadoraService — no I/O required."""
+"""Unit tests for CalculadoraService — mocking DB where necessary."""
 
 import pytest
-
-from app.application.services.calculadora_service import (
-    CalculadoraService,
-    ComponenteNota,
-)
-
+from unittest.mock import AsyncMock, MagicMock
+from app.application.services.calculadora_service import CalculadoraService
+from app.infrastructure.models.curso import Curso
+from app.infrastructure.models.evaluacion import Evaluacion, EstadoEvaluacion
 
 class TestCalculadoraService:
     """Unit tests for the predictive grade calculator."""
 
     def setup_method(self) -> None:
-        """Set up calculator with default 3.0 passing grade."""
-        self.calc = CalculadoraService(nota_aprobacion=3.0)
-
-    def test_empty_components_returns_zero(self) -> None:
-        """Empty component list should return zeroed result."""
-        result = self.calc.calcular([])
-        assert result.nota_actual == 0.0
-        assert result.porcentaje_completado == 0.0
-        assert result.puede_aprobar is True
-
-    def test_perfect_score(self) -> None:
-        """All components with max scores should yield nota_actual = 5.0."""
-        componentes = [
-            ComponenteNota("Parcial 1", 30.0, 5.0),
-            ComponenteNota("Parcial 2", 30.0, 5.0),
-            ComponenteNota("Final", 40.0, 5.0),
-        ]
-        result = self.calc.calcular(componentes)
-        assert result.nota_actual == pytest.approx(5.0, abs=0.01)
-        assert result.porcentaje_completado == 100.0
-        assert result.puede_aprobar is True
-
-    def test_failing_course(self) -> None:
-        """Insufficient scores with no pending components should fail."""
-        componentes = [
-            ComponenteNota("Parcial 1", 50.0, 1.0),
-            ComponenteNota("Final", 50.0, 1.0),
-        ]
-        result = self.calc.calcular(componentes)
-        assert result.nota_actual < 3.0
-        assert result.puede_aprobar is False
-
-    def test_pending_components_enable_recovery(self) -> None:
-        """A bad first score with pending evaluations should allow recovery."""
-        componentes = [
-            ComponenteNota("Parcial 1", 30.0, 2.0),  # evaluado
-            ComponenteNota("Final", 70.0, None),      # pendiente
-        ]
-        result = self.calc.calcular(componentes)
-        assert result.porcentaje_completado == 30.0
-        assert result.puede_aprobar is True  # Proyección optimista >= 3.0
+        """Set up calculator."""
+        self.calc = CalculadoraService()
 
     def test_prioridad_formula(self) -> None:
         """P = W * D / (T + 1) — basic correctness check."""
@@ -67,5 +26,40 @@ class TestCalculadoraService:
         priority = self.calc.calcular_prioridad_tarea(
             peso=5, dias_restantes=-2, tiempo_estimado_horas=1
         )
-        # dias_restantes clipped to 0, luego max(1, 0) = 1
+        # dias_restantes clipped to 0, then max(1, 0) = 1
         assert priority == pytest.approx(5 * 1 / (1 + 1), abs=0.001)
+
+    @pytest.mark.asyncio
+    async def test_calcular_proyeccion_basic(self) -> None:
+        """Test a simple projection scenario with mocked DB."""
+        mock_db = AsyncMock()
+        self.calc.db = mock_db
+        
+        # Setup mock course and evaluations
+        curso = Curso(id=1, nombre="Test Course")
+        e1 = Evaluacion(
+            nombre="Parcial 1", 
+            ponderacion_porcentaje=30.0, 
+            nota_obtenida=4.0, 
+            estado=EstadoEvaluacion.CORREGIDA
+        )
+        e2 = Evaluacion(
+            nombre="Final", 
+            ponderacion_porcentaje=70.0, 
+            estado=EstadoEvaluacion.PENDIENTE
+        )
+        curso.evaluaciones = [e1, e2]
+        
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = curso
+        mock_db.execute.return_value = mock_result
+        
+        # Objetivo: 5.0
+        # (5.0 * 100 - 4.0 * 30) / 70 = (500 - 120) / 70 = 380 / 70 = 5.43
+        res = await self.calc.calcular_proyeccion(curso_id=1, nota_objetivo=5.0)
+        
+        assert res.nota_actual == 4.0
+        assert res.ponderacion_restante == 70.0
+        assert res.es_factible is True
+        assert res.estrategias[0].distribuciones[0]["nota_necesaria"] == pytest.approx(5.43, abs=0.01)
+
