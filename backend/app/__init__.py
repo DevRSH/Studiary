@@ -1,0 +1,1 @@
+"""Studiary Backend Application Package."""
