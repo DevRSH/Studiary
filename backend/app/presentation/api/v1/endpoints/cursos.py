@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.infrastructure.repositories.curso_repository import CursoRepository
 from app.application.services.curso_service import CursoService
-from app.application.schemas.requests.curso_schemas import CursoCreateRequest, CursoUpdateRequest
-from app.application.schemas.responses.curso_schemas import CursoResponse, CursoDetailResponse
+from app.application.schemas.requests.curso_requests import CursoCreateRequest, CursoUpdateRequest
+from app.application.schemas.responses.curso_responses import CursoResponse, CursoDetailResponse
 from app.infrastructure.models.curso import Curso
 from app.core.exceptions import NotFoundException
 

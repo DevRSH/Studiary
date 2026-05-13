@@ -29,3 +29,10 @@ class CursoListResponse(BaseModel):
 
     items: list[CursoResponse]
     total: int
+
+
+class CursoDetailResponse(CursoResponse):
+    """Response DTO for Curso with evaluations."""
+
+    evaluaciones: list = []
+    promedio_actual: float | None = None
