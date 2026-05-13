@@ -1,2 +1,4 @@
 /** Evaluaciones feature public API. */
-export {};
+export * from './types';
+export * from './api/evaluacionApi';
+export * from './hooks/useEvaluaciones';
