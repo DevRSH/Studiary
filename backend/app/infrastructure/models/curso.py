@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from .periodo import Periodo
     from .evaluacion import Evaluacion
     from .tarea import Tarea
-    from .nota import Nota
+    from .tema import Tema
 
 class Curso(BaseModel):
     """Course model mapped to an academic period."""
@@ -39,8 +39,8 @@ class Curso(BaseModel):
         cascade="all, delete-orphan"
     )
     
-    notas: Mapped[list["Nota"]] = relationship(
-        "Nota",
+    temas: Mapped[list["Tema"]] = relationship(
+        "Tema",
         back_populates="curso",
         cascade="all, delete-orphan"
     )

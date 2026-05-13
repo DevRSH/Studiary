@@ -26,6 +26,7 @@ from app.infrastructure.models import (  # noqa: F401
     tarea,
     nota,
     recurso,
+    tema,
 )
 
 # this is the Alembic Config object

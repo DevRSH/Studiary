@@ -54,8 +54,12 @@ class EvaluacionUpdateRequest(BaseModel):
 
 
 class EvaluacionNotaUpdateRequest(BaseModel):
-    """Request schema for updating only the nota_obtenida."""
+    """Request schema for updating only the nota_obtenida.
+    
+    Note: Only lower bound validated here; upper bound validated
+    at service layer based on evaluacion.nota_maxima.
+    """
 
     nota_obtenida: float = Field(
-        ..., ge=1.0, le=7.0, description="Nota obtenida"
+        ..., ge=1.0, description="Nota obtenida (validada contra nota_maxima en servicio)"
     )

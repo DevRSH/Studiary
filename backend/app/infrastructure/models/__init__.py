@@ -5,8 +5,9 @@ from app.infrastructure.models.periodo import Periodo
 from app.infrastructure.models.curso import Curso
 from app.infrastructure.models.evaluacion import Evaluacion
 from app.infrastructure.models.tarea import Tarea
-from app.infrastructure.models.nota import Nota
+from app.infrastructure.models.nota import Nota, Dibujo, Tag, TipoNota
 from app.infrastructure.models.recurso import Recurso
+from app.infrastructure.models.tema import Tema
 
 __all__ = [
     "BaseModel",
@@ -16,5 +17,9 @@ __all__ = [
     "Evaluacion",
     "Tarea",
     "Nota",
+    "Dibujo",
+    "Tag",
+    "TipoNota",
     "Recurso",
+    "Tema",
 ]
