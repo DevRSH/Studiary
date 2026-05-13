@@ -32,16 +32,31 @@ export function PeriodosPage(): ReactElement {
         <div className="space-y-2 text-sm text-white/40">
           <div className="flex justify-between">
             <span>Backend API</span>
-            <span className="text-emerald-400 font-mono">:8000 ✓</span>
+            <span className="text-emerald-400 font-mono">:8001 ✓</span>
           </div>
           <div className="flex justify-between">
             <span>Frontend PWA</span>
-            <span className="text-emerald-400 font-mono">:5173 ✓</span>
+            <span className="text-emerald-400 font-mono">:5174 ✓</span>
           </div>
           <div className="flex justify-between">
             <span>Sprint</span>
-            <span className="text-primary-400 font-mono">0 — Foundation</span>
+            <span className="text-white/60">0 — Foundation</span>
           </div>
+        </div>
+
+        {/* Demo Link */}
+        <div className="mt-6 pt-6 border-t border-white/10">
+          <a 
+            href="/demo"
+            className="flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors group"
+          >
+            <span className="text-lg group-hover:scale-110 transition-transform">🎮</span>
+            <span className="font-medium">Probar Demo del Calculador</span>
+            <span className="ml-auto text-white/40 group-hover:text-white/60">→</span>
+          </a>
+          <p className="text-white/40 text-xs mt-1 ml-7">
+            Página de demostración permanente para probar el motor predictivo
+          </p>
         </div>
       </div>
 

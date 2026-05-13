@@ -7,7 +7,8 @@
 
 import axios, { type AxiosError, type AxiosInstance } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
+// Use relative URL to leverage Vite dev server proxy
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 const AUTH_TOKEN_KEY = 'studiary_auth_token';
 
@@ -16,7 +17,7 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1`,
+      baseURL: API_BASE_URL,
       headers: { 'Content-Type': 'application/json' },
       timeout: 10_000,
     });

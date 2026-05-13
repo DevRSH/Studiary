@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.infrastructure.repositories.curso_repository import CursoRepository
@@ -17,9 +18,14 @@ def get_curso_service(db: AsyncSession = Depends(get_db)) -> CursoService:
 @router.post("/", response_model=CursoResponse, status_code=status.HTTP_201_CREATED)
 async def create_curso(
     data: CursoCreateRequest,
-    service: CursoService = Depends(get_curso_service)
+    service: CursoService = Depends(get_curso_service),
+    db: AsyncSession = Depends(get_db)
 ) -> CursoResponse:
-    curso = await service.create_curso(data)
+    # Create returns entity, but we need ORM model for response
+    entity = await service.create_curso(data)
+    # Fetch the ORM model for proper serialization
+    result = await db.execute(select(Curso).where(Curso.id == entity.id))
+    curso = result.scalar_one()
     return CursoResponse.model_validate(curso)
 
 @router.get("/{curso_id}", response_model=CursoDetailResponse)
@@ -34,9 +40,12 @@ async def get_curso(
 async def update_curso(
     curso_id: int,
     data: CursoUpdateRequest,
-    service: CursoService = Depends(get_curso_service)
+    service: CursoService = Depends(get_curso_service),
+    db: AsyncSession = Depends(get_db)
 ) -> CursoResponse:
-    curso = await service.update_curso(curso_id, data)
+    entity = await service.update_curso(curso_id, data)
+    result = await db.execute(select(Curso).where(Curso.id == entity.id))
+    curso = result.scalar_one()
     return CursoResponse.model_validate(curso)
 
 @router.delete("/{curso_id}", status_code=status.HTTP_204_NO_CONTENT)

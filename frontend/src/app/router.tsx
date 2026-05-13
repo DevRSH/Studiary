@@ -9,6 +9,7 @@ import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 
 // Lazy-loaded feature pages
 const DashboardPage = lazy(() => import('@features/periodos').then((m) => ({ default: m.PeriodosPage })));
+const DemoPage = lazy(() => import('./pages/DemoPage').then((m) => ({ default: m.DemoPage })));
 
 function RootLayout(): ReactElement {
   return (
@@ -39,6 +40,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <DashboardPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'demo',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <DemoPage />
           </Suspense>
         ),
       },

@@ -15,11 +15,12 @@ class CursoResponse(BaseModel):
     codigo: str
     creditos: int
     color: str
-    docente: str | None
-    activo: bool
     periodo_id: int
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    # Optional fields not in Curso model
+    docente: str | None = None
+    activo: bool = True
 
 
 class CursoListResponse(BaseModel):

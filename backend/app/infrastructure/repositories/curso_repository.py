@@ -21,7 +21,6 @@ class CursoRepository(BaseRepository[Curso]):
             codigo=model.codigo or "",
             color=model.color,
             creditos=model.creditos,
-            docente=model.docente,
         )
 
     async def get_by_periodo(self, periodo_id: int) -> Sequence[Curso]:
