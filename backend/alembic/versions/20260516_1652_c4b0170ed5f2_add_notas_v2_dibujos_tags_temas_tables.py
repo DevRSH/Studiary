@@ -1,0 +1,140 @@
+"""Add notas v2, dibujos, tags, temas tables
+
+Revision ID: c4b0170ed5f2
+Revises: 5409c211d268
+Create Date: 2026-05-16 16:52:34.681170+00:00
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+from sqlalchemy.dialects import sqlite
+
+
+# revision identifiers, used by Alembic.
+revision: str = 'c4b0170ed5f2'
+down_revision: Union[str, None] = '5409c211d268'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    # Create tags table
+    op.create_table('tags',
+        sa.Column('nombre', sa.String(length=50), nullable=False),
+        sa.Column('color', sa.String(length=7), nullable=False),
+        sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('nombre')
+    )
+    with op.batch_alter_table('tags', schema=None) as batch_op:
+        batch_op.create_index('ix_tags_id', ['id'], unique=False)
+
+    # Create temas table
+    op.create_table('temas',
+        sa.Column('curso_id', sa.Integer(), nullable=False),
+        sa.Column('nombre', sa.String(length=200), nullable=False),
+        sa.Column('descripcion', sa.Text(), nullable=True),
+        sa.Column('orden', sa.Integer(), nullable=False),
+        sa.Column('parent_id', sa.Integer(), nullable=True),
+        sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
+        sa.ForeignKeyConstraint(['curso_id'], ['cursos.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['parent_id'], ['temas.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('temas', schema=None) as batch_op:
+        batch_op.create_index('ix_temas_curso_id', ['curso_id'], unique=False)
+        batch_op.create_index('ix_temas_id', ['id'], unique=False)
+        batch_op.create_index('ix_temas_parent_id', ['parent_id'], unique=False)
+
+    # Create new notas table with updated schema (indexes created after rename)
+    op.create_table('notas_new',
+        sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column('tema_id', sa.Integer(), nullable=True),
+        sa.Column('titulo', sa.String(length=200), nullable=False),
+        sa.Column('contenido_markdown', sa.Text(), nullable=True),
+        sa.Column('tipo', sa.Enum('TEXTO', 'HANDWRITTEN', 'MIXTO', name='tiponota'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
+        sa.ForeignKeyConstraint(['tema_id'], ['temas.id'], ondelete='SET NULL'),
+        sa.PrimaryKeyConstraint('id')
+    )
+
+    # Migrate data from old notas table
+    op.execute('''
+        INSERT INTO notas_new (id, titulo, contenido_markdown, tipo, created_at, updated_at)
+        SELECT id, titulo, contenido_md, 'TEXTO', created_at, updated_at FROM notas
+    ''')
+
+    # Drop old notas table and rename new one
+    op.drop_table('notas')
+    op.rename_table('notas_new', 'notas')
+
+    # Create indexes on renamed table
+    op.create_index('ix_notas_tema_id', 'notas', ['tema_id'], unique=False)
+    op.create_index('ix_notas_id', 'notas', ['id'], unique=False)
+
+    # Create dibujos table
+    op.create_table('dibujos',
+        sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column('nota_id', sa.Integer(), nullable=False),
+        sa.Column('canvas_json', sa.Text(), nullable=False),
+        sa.Column('thumbnail_base64', sa.Text(), nullable=True),
+        sa.Column('orden', sa.Integer(), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
+        sa.ForeignKeyConstraint(['nota_id'], ['notas.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('dibujos', schema=None) as batch_op:
+        batch_op.create_index('ix_dibujos_id', ['id'], unique=False)
+        batch_op.create_index('ix_dibujos_nota_id', ['nota_id'], unique=False)
+
+    # Create nota_tags many-to-many table
+    op.create_table('nota_tags',
+        sa.Column('nota_id', sa.Integer(), nullable=False),
+        sa.Column('tag_id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['nota_id'], ['notas.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['tag_id'], ['tags.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('nota_id', 'tag_id')
+    )
+
+
+def downgrade() -> None:
+    # ### commands auto generated by Alembic - please adjust! ###
+    with op.batch_alter_table('notas', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('curso_id', sa.INTEGER(), nullable=False))
+        batch_op.add_column(sa.Column('contenido_md', sa.TEXT(), nullable=False))
+        batch_op.add_column(sa.Column('canvas_json', sa.TEXT(), nullable=True))
+        batch_op.add_column(sa.Column('nextcloud_path', sa.VARCHAR(length=500), nullable=True))
+        batch_op.add_column(sa.Column('tags', sa.VARCHAR(length=500), nullable=False))
+        batch_op.drop_constraint(None, type_='foreignkey')
+        batch_op.create_foreign_key(None, 'cursos', ['curso_id'], ['id'], ondelete='CASCADE')
+        batch_op.drop_index(batch_op.f('ix_notas_tema_id'))
+        batch_op.create_index(batch_op.f('ix_notas_curso_id'), ['curso_id'], unique=False)
+        batch_op.drop_column('tipo')
+        batch_op.drop_column('contenido_markdown')
+        batch_op.drop_column('tema_id')
+
+    op.drop_table('nota_tags')
+    with op.batch_alter_table('dibujos', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_dibujos_nota_id'))
+        batch_op.drop_index(batch_op.f('ix_dibujos_id'))
+
+    op.drop_table('dibujos')
+    with op.batch_alter_table('temas', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_temas_parent_id'))
+        batch_op.drop_index(batch_op.f('ix_temas_id'))
+        batch_op.drop_index(batch_op.f('ix_temas_curso_id'))
+
+    op.drop_table('temas')
+    with op.batch_alter_table('tags', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_tags_id'))
+
+    op.drop_table('tags')
+    # ### end Alembic commands ###
