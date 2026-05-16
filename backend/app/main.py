@@ -95,6 +95,23 @@ def create_application() -> FastAPI:
         """Retorna el estado operacional del servicio."""
         return {"status": "healthy", "version": settings.app_version}
 
+    # ─── Static Files (Production) ────────────────────────────────────────────
+    static_dir = Path(__file__).parent / "static"
+    if static_dir.exists() and is_production:
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+        
+        @app.get("/{full_path:path}")
+        async def serve_spa(full_path: str):
+            """Serve React SPA for all non-API routes."""
+            file_path = static_dir / full_path
+            
+            # Si el archivo existe, servirlo
+            if file_path.exists() and file_path.is_file():
+                return FileResponse(file_path)
+            
+            # Caso contrario, servir index.html (SPA routing)
+            return FileResponse(static_dir / "index.html")
+
     return app
 
 

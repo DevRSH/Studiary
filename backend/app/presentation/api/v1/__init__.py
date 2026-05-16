@@ -2,10 +2,11 @@
 
 from fastapi import APIRouter
 
-from app.presentation.api.v1.endpoints import periodos, cursos, evaluaciones, tareas, notas, calculadora
+from app.presentation.api.v1.endpoints import periodos, cursos, evaluaciones, tareas, notas, calculadora, health
 
 router = APIRouter()
 
+router.include_router(health.router, prefix="/health", tags=["Health"])
 router.include_router(periodos.router, prefix="/periodos", tags=["Periodos"])
 router.include_router(cursos.router, tags=["Cursos"])
 router.include_router(evaluaciones.router, tags=["evaluaciones"])

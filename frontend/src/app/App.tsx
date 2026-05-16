@@ -5,6 +5,7 @@
 import type { ReactElement } from 'react';
 import { Providers } from './providers';
 import { Router } from './router';
+import { InstallPrompt } from '@/features/pwa/components/InstallPrompt';
 
 /**
  * Main application component.
@@ -14,6 +15,7 @@ export function App(): ReactElement {
   return (
     <Providers>
       <Router />
+      <InstallPrompt />
     </Providers>
   );
 }

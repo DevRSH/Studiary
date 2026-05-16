@@ -9,42 +9,69 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Studiary — Centro de Comando Académico',
+        name: 'Studiary - Centro de Comando Académico',
         short_name: 'Studiary',
-        description: 'PWA móvil-first para gestión académica con cálculo predictivo de notas',
-        theme_color: '#6366f1',
-        background_color: '#0f0f14',
+        description: 'Sistema de gestión académica con calculadora de notas predictiva y organización inteligente',
+        theme_color: '#0ea5e9',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
         icons: [
-          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          {
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
         ],
       },
       workbox: {
-        // Estrategia cache-first para assets estáticos
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            urlPattern: /^https:\/\/.*\.(?:png|jpg|jpeg|svg|gif)$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'google-fonts-cache',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 días
+              },
             },
           },
           {
-            urlPattern: /\/api\/v1\/.*/i,
+            urlPattern: /^https?:\/\/.*\/api\/.*/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 5 },
+              networkTimeoutSeconds: 10,
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 5, // 5 minutos
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
             },
           },
         ],
+      },
+      devOptions: {
+        enabled: true,
       },
     }),
   ],
@@ -61,15 +88,16 @@ export default defineConfig({
   },
 
   build: {
-    // Optimización para Railway Free Tier (512MB RAM)
     target: 'es2022',
     minify: 'esbuild',
+    outDir: 'dist',
+    sourcemap: false,
     rollupOptions: {
       output: {
-        // Code splitting por features para lazy loading
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-query': ['@tanstack/react-query'],
+          'vendor-ui': ['lucide-react', 'date-fns'],
         },
       },
     },
