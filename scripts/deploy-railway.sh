@@ -36,7 +36,14 @@ echo "🧪 Running backend tests..."
 cd ../backend
 pytest tests/ -v
 
-# 7. Deploy
+# 7. Verificar puerto único
+echo "🔌 Checking port 8333..."
+if lsof -Pi :8333 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    echo "⚠️  Puerto 8333 ocupado. Cerrando procesos..."
+    lsof -Pi :8333 -sTCP:LISTEN -t | xargs kill -9 2>/dev/null || true
+fi
+
+# 8. Deploy
 echo "🚢 Deploying to Railway..."
 git add -A
 git commit -m "chore: deploy to railway $(date +'%Y-%m-%d %H:%M')"

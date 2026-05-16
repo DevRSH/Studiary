@@ -20,11 +20,15 @@ class Settings(BaseSettings):
     app_version: str = "1.0.0"
     debug: bool = False
 
+    # ─── Server ─────────────────────────────────────────────────────────────────
+    port: int = 8333  # Puerto único para Studiary (evita conflictos con 8000, 3000)
+    host: str = "0.0.0.0"
+    
     # ─── Database ─────────────────────────────────────────────────────────────
     database_url: str = "sqlite+aiosqlite:///./data/studiary.db"
 
     # ─── CORS ─────────────────────────────────────────────────────────────────
-    cors_origins: list[str] = ["http://localhost:5173"]
+    cors_origins: list[str] = ["http://localhost:5173", "http://localhost:8333"]
 
     # ─── Security ─────────────────────────────────────────────────────────────
     secret_key: str

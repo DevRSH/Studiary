@@ -104,10 +104,21 @@ export default defineConfig({
   },
 
   server: {
-    port: 5174,
+    port: 5333,  // Puerto único para Studiary dev
+    strictPort: false,  // Si está ocupado, busca siguiente disponible
     proxy: {
       '/api': {
-        target: process.env.VITE_API_BASE_URL || 'http://localhost:8001',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:8333',
+        changeOrigin: true,
+      },
+    },
+  },
+  preview: {
+    port: 5444,  // Puerto único para Studiary preview
+    strictPort: false,
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:8333',
         changeOrigin: true,
       },
     },
