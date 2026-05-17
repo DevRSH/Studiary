@@ -28,6 +28,14 @@ async def create_curso(
     curso = result.scalar_one()
     return CursoResponse.model_validate(curso)
 
+@router.get("/", response_model=list[CursoResponse])
+async def list_cursos(
+    db: AsyncSession = Depends(get_db)
+) -> list[CursoResponse]:
+    result = await db.execute(select(Curso).order_by(Curso.nombre.asc()))
+    cursos = result.scalars().all()
+    return [CursoResponse.model_validate(curso) for curso in cursos]
+
 @router.get("/{curso_id}", response_model=CursoDetailResponse)
 async def get_curso(
     curso_id: int,

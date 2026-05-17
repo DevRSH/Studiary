@@ -160,7 +160,7 @@ export function DemoPage(): React.ReactElement {
             </a>
             <span className="text-white/30">|</span>
             <a 
-              href="http://localhost:8001/docs" 
+              href="/docs" 
               target="_blank" 
               rel="noreferrer"
               className="text-xs text-primary-400 hover:text-primary-300 underline"
