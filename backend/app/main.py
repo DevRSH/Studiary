@@ -102,36 +102,43 @@ def create_application() -> FastAPI:
     @app.get("/health", tags=["Health"], summary="Health check endpoint")
     async def health_check() -> dict[str, str]:
         """Retorna el estado operacional del servicio."""
-        return {"status": "healthy", "version": settings.app_version, "port": settings.port}
+        return {"status": "healthy", "version": settings.app_version, "port": str(settings.port)}
 
     # ─── Static Files (Single Port Mode) ───────────────────────────────────────
-    # Sirve frontend desde ../frontend/dist para modo single-port
-    backend_dir = Path(__file__).parent
-    project_root = backend_dir.parent.parent.parent  # app/ -> core/ -> backend/ -> project/
+    # app/main.py -> app/ -> backend/ -> project_root/
+    backend_dir = Path(__file__).parent  # app/
+    project_root = backend_dir.parent.parent  # backend/ -> Studiary/
     static_dir = project_root / "frontend" / "dist"
     
     if static_dir.exists():
+        # Mount directories first (these are checked before routes)
         app.mount("/assets", StaticFiles(directory=str(static_dir / "assets")), name="assets")
         app.mount("/icons", StaticFiles(directory=str(static_dir / "icons")), name="icons")
+        
+        # Explicit root files (favicon, manifest, etc.)
+        root_files = ["favicon.svg", "manifest.json", "manifest.webmanifest", "sw.js", "workbox-*.js"]
+        
+        # SPA catch-all route - MUST be registered AFTER specific routes
+        @app.get("/")
+        async def serve_root():
+            """Serve index.html for root path."""
+            return FileResponse(static_dir / "index.html")
         
         @app.get("/{full_path:path}")
         async def serve_spa(full_path: str):
             """Serve React SPA for all non-API routes."""
-            # Skip API and health routes - let them pass through
-            if full_path.startswith("api/") or full_path == "health":
+            # Skip API and health routes
+            if full_path.startswith("api/") or full_path.startswith("health"):
                 raise HTTPException(status_code=404, detail="API route")
             
             file_path = static_dir / full_path
             
-            # Si el archivo existe, servirlo
+            # If file exists, serve it directly
             if file_path.exists() and file_path.is_file():
                 return FileResponse(file_path)
             
-            # Caso contrario, servir index.html (SPA routing)
-            index_file = static_dir / "index.html"
-            if index_file.exists():
-                return FileResponse(index_file)
-            return {"error": "Frontend not built"}
+            # For any other path, serve index.html (SPA routing)
+            return FileResponse(static_dir / "index.html")
 
     return app
 
