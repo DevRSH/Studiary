@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useProyeccion } from '../hooks/useCalculadora';
-import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
-import { Slider } from '@/shared/components/ui/slider';
 
 export function CalculadoraNotas({ cursoId, cursoNombre }: { cursoId: number, cursoNombre: string }) {
   const [notaObjetivo, setNotaObjetivo] = useState(5.5);
@@ -11,34 +9,37 @@ export function CalculadoraNotas({ cursoId, cursoNombre }: { cursoId: number, cu
 
   if (isError) {
     return (
-      <Card className="w-full max-w-md border-red-200">
-        <CardContent className="p-4 text-center text-red-600">
+      <div className="w-full max-w-md rounded-2xl border border-red-200 bg-white">
+        <div className="p-4 text-center text-red-600">
           <p className="font-bold">Error al calcular proyección</p>
           <p className="text-xs">{(error as Error)?.message || 'Ocurrió un error inesperado'}</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="w-full max-w-md shadow-lg border-slate-100">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl font-bold text-slate-800">{cursoNombre}</CardTitle>
+    <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white shadow-lg">
+      <div className="p-4 pb-2">
+        <h2 className="text-xl font-bold text-slate-800">{cursoNombre}</h2>
         <div className="space-y-4 mt-2">
           <div className="flex justify-between items-center">
              <p className="text-sm font-medium text-slate-600">Meta Académica</p>
              <p className="text-lg font-bold text-primary">{notaObjetivo.toFixed(1)}</p>
           </div>
-          <Slider 
-            min={1} max={7} step={0.1} 
-            value={[notaObjetivo]} 
-            onValueChange={(v) => setNotaObjetivo(v[0])}
-            className="py-2"
+          <input
+            type="range"
+            min={1}
+            max={7}
+            step={0.1}
+            value={notaObjetivo}
+            onChange={(event) => setNotaObjetivo(Number(event.target.value))}
+            className="w-full accent-primary-500"
           />
         </div>
-      </CardHeader>
+      </div>
       {p && (
-        <CardContent className="space-y-4 pt-2">
+        <div className="space-y-4 p-4 pt-2">
           <div className={`p-4 rounded-xl text-center font-black tracking-tight ${p.es_factible ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
             {p.es_factible ? '✨ ESCENARIO FACTIBLE' : '⚠️ ESCENARIO IMPOSIBLE'}
           </div>
@@ -87,8 +88,8 @@ export function CalculadoraNotas({ cursoId, cursoNombre }: { cursoId: number, cu
                <p className="text-xs text-slate-500">No hay evaluaciones pendientes para proyectar.</p>
              </div>
           )}
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }

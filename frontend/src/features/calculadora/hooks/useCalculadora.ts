@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/shared/api/client';
+import { apiClient } from '@/shared/api/client';
 
 export interface Proyeccion {
   curso_id: number;
@@ -25,7 +25,7 @@ export function useProyeccion(cursoId: number, notaObjetivo: number) {
   return useQuery({
     queryKey: ['proyeccion', cursoId, notaObjetivo],
     queryFn: async () => {
-      const response = await api.get<Proyeccion>(
+      const response = await apiClient.get<Proyeccion>(
         `/calculadora/proyeccion/${cursoId}`,
         { params: { nota_objetivo: notaObjetivo } }
       );
