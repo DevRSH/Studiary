@@ -52,6 +52,13 @@ interface DashboardData {
   notas: Nota[];
 }
 
+const EMPTY_DASHBOARD: DashboardData = {
+  periodos: [],
+  cursos: [],
+  evaluaciones: [],
+  notas: [],
+};
+
 interface PeriodoCreateRequest {
   nombre: string;
   fecha_inicio: string;
@@ -90,10 +97,10 @@ async function fetchDashboardData(): Promise<DashboardData> {
   ]);
 
   return {
-    periodos: periodosResponse.data.items,
-    cursos: cursosResponse.data,
-    evaluaciones: evaluacionesResponse.data,
-    notas: notasResponse.data,
+    periodos: Array.isArray(periodosResponse.data.items) ? periodosResponse.data.items : [],
+    cursos: Array.isArray(cursosResponse.data) ? cursosResponse.data : [],
+    evaluaciones: Array.isArray(evaluacionesResponse.data) ? evaluacionesResponse.data : [],
+    notas: Array.isArray(notasResponse.data) ? notasResponse.data : [],
   };
 }
 
@@ -200,7 +207,12 @@ export function PeriodosPage(): ReactElement {
     onSuccess: invalidateDashboard,
   });
 
-  const dashboard = data ?? { periodos: [], cursos: [], evaluaciones: [], notas: [] };
+  const dashboard = {
+    periodos: data?.periodos ?? EMPTY_DASHBOARD.periodos,
+    cursos: data?.cursos ?? EMPTY_DASHBOARD.cursos,
+    evaluaciones: data?.evaluaciones ?? EMPTY_DASHBOARD.evaluaciones,
+    notas: data?.notas ?? EMPTY_DASHBOARD.notas,
+  };
   const periodoActivo = dashboard.periodos.find((periodo) => periodo.activo) ?? dashboard.periodos[0];
   const evaluacionesPendientes = dashboard.evaluaciones
     .filter((evaluacion) => evaluacion.estado === 'pendiente')
